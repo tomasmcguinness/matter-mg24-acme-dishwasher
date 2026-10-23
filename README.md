@@ -166,6 +166,20 @@ The application needs a bootloader. Build and flash the `matter_bootloader_exter
 commander flash cmake_gcc/build/base/matter_mg24_acme_dishwasher.s37
 ```
 
+### Vendor/Product name
+
+Fresh hardware reports the Basic Information cluster's `VendorName`/`ProductName` as the SDK's own placeholders, `Silabs`/`SL_Sample`, in any Matter controller (Apple Home, chip-tool, etc.). That's not `CHIP_DEVICE_CONFIG_DEVICE_VENDOR_NAME`/`_PRODUCT_NAME` (those defines are unused on this platform) — it's provisioned data read from NVM3 by `examples/platform/silabs/provision/ProvisionStorageDefault.cpp`, and the setters for it (`Storage::SetVendorName`/`SetProductName`) are private to the SDK's own provisioning protocol, not callable from application code. Setting it for real means running the Matter extension's provisioning tool once per device, over RTT via J-Link, against the already-flashed, already-running firmware:
+
+```
+cd <matter-extension>/third_party/matter_support/provision
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt   # needs Python < 3.13 (bleak pin); 3.10/3.11/3.12 all work
+.venv/bin/python3 provision.py write -d efr32mg24 -c <jlink-serial> -vn "Silicon Labs" -pn "Tiny Dishwasher"
+```
+
+`<jlink-serial>` is the adapter's `serialNumber` from `commander adapter list` (not `adapterSerialNumber` — they differ). `commander` needs to be on `PATH` (the tool shells out to it).
+
+**This flashes a small temporary "manufacturing data" image to talk RTT, which overwrites the bootloader and the start of the app — reflash both afterward.** The NVM3 region it writes to isn't touched by a normal bootloader/app reflash, so the name sticks across future reflashes (though not across `commander device masserase`, which wipes NVM3 too).
+
 ## Commissioning
 
 The device uses the test setup code `20202021` and discriminator `3840` (`0xF00`). Press BTN0 to start BLE advertising, then:
