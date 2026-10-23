@@ -1,0 +1,199 @@
+# Silicon Labs Project Configuration Tools: slcp, v0, Component selection file.
+#
+# Tiny Matter Dishwasher, ported from the ESP32 version (matter-esp32-tiny-dishwasher)
+# to the EFR32MG24 (xG24 Explorer Kit, BRD2703A) running Matter over Thread.
+#
+# Based on the Silicon Labs "matter_thread_soc_dishwasher_app_freertos" sample.
+# See matter_mg24_acme_dishwasher.slcp for the BRD2601B (xG24 Dev Kit) variant;
+# the two share all sources and only differ in board, part and the rotary
+# encoder's pin assignment (see the `define:` section below).
+project_name: matter_mg24_acme_dishwasher_brd2703a
+label: Matter Thread - Tiny Dishwasher (MG24 Explorer Kit)
+description: A toy Matter dishwasher with Operational State, Dishwasher Mode, On/Off (Dead Front)
+  and Device Energy Management (power forecast + start time adjustment).
+category: Matter Application
+package: matter
+quality: experimental
+
+sdk:
+  id: simplicity_sdk
+  version: 2026.6.2
+  vendor: silabs
+
+sdk_extension:
+  - id: matter
+    version: "2.9.2"
+    vendor: silabs
+
+component:
+  - id: EFR32MG24B210F1536IM48
+  - id: brd2703a_a02
+  - id: device_init
+  - id: sl_main
+  - id: clock_manager
+  - id: rail_util_pti
+  - id: matter_buttons
+  - id: matter_leds
+  - id: matter
+  - id: matter_platform_mg
+  - id: matter_ble
+  - id: matter_thread
+  - id: matter_ota_support
+  - id: matter_crypto
+  - id: matter_shell
+  - id: matter_gatt_static
+  - id: matter_provision_default
+  - id: matter_log_uart
+  - id: matter_default_lcd_config
+  - id: matter_configuration_over_swo
+  - id: matter_segger_rtt
+
+  - id: matter_dishwasher
+  - id: app_common
+  - id: matter_codegen_dm
+  - id: matter_access_control
+  - id: matter_administrator_commissioning
+  - id: matter_basic_information
+  - id: matter_bindings
+  - id: matter_descriptor
+  - id: matter_general_commissioning
+  - id: matter_diagnostic_logs
+  - id: matter_general_diagnostics
+  - id: matter_group_key_mgmt
+  - id: matter_identify
+  - id: matter_localization_configuration
+  - id: matter_network_commissioning
+  - id: matter_operational_credentials
+  - id: matter_ota_requestor
+  - id: matter_software_diagnostics
+  - id: matter_thread_network_diagnostics
+  - id: matter_user_label
+  - id: matter_unit_localization
+  - id: matter_time_synchronization
+
+  # Dishwasher endpoint
+  - id: matter_operational_state
+  - id: matter_mode_base
+  - id: matter_on_off
+
+  # Device Energy Management endpoint (+ the SDK's reference DEM delegate)
+  - id: matter_dem
+
+  # Commodity Price client (reads prices from a bound tariff device)
+  - id: matter_read_client
+
+  # SSD1306 OLED on the Qwiic connector (same I2C1/PC04-PC05 pins as BRD2601B)
+  # The I2C driver rather than I2CSPM, whose transfers can block for 5 minutes with interrupts off
+  - id: i2c
+    instance:
+      - qwiic
+
+requires:
+  - name: matter_drivers_series_2
+
+config_file:
+  - path: config/common/dishwasher-thread-app.zap
+    directory: common
+    file_id: zap_config
+  - path: config/provision/provision.mattpconf
+    directory: provision
+    file_id: provision_config
+
+include:
+  - path: include
+    file_list:
+      - path: AppConfig.h
+      - path: AppEvent.h
+      - path: AppTask.h
+      - path: CHIPProjectConfig.h
+      - path: DishwasherDelegates.h
+      - path: DishwasherManager.h
+      - path: EnergyManagement.h
+      - path: GridConditionsSubscriber.h
+      - path: PriceSubscriber.h
+      - path: RotaryEncoder.h
+      - path: ShellCommands.h
+      - path: Ssd1306.h
+      - path: StartPlanner.h
+      - path: StatusDisplay.h
+      - path: WallClock.h
+  - path: third_party/qrcodegen
+    file_list:
+      - path: qrcodegen.h
+
+source:
+  - path: src/main.cpp
+  - path: src/AppTask.cpp
+  - path: src/DataModelCallbacks.cpp
+  - path: src/DishwasherDelegates.cpp
+  - path: src/DishwasherManager.cpp
+  - path: src/EnergyManagement.cpp
+  - path: src/GridConditionsSubscriber.cpp
+  - path: src/PriceSubscriber.cpp
+  - path: src/RotaryEncoder.cpp
+  - path: src/ShellCommands.cpp
+  - path: src/Ssd1306.cpp
+  - path: src/StartPlanner.cpp
+  - path: src/StatusDisplay.cpp
+  - path: src/WallClock.cpp
+  - path: third_party/qrcodegen/qrcodegen.c
+
+define:
+  - name: CHIP_CRYPTO_PLATFORM
+    value: "1"
+  - name: _WANT_REENT_SMALL
+    value: "1"
+  - name: NVM3_DEFAULT_NVM_SIZE
+    value: "40960"
+  - name: NVM3_DEFAULT_MAX_OBJECT_SIZE
+    value: "4092"
+
+  # BRD2703A has no free expansion header like the Dev Kit: PA07 (used for the
+  # encoder's CLK on BRD2601B) is claimed by the board's own LED1. These three
+  # repurpose the Mikroe click socket's pins instead (AN/SCL/SDA), which are
+  # otherwise unused since this project doesn't add the i2c/pwm "mikroe" components.
+  - name: ROTARY_ENCODER_CLK_PORT
+    value: SL_GPIO_PORT_A
+  - name: ROTARY_ENCODER_CLK_PIN
+    value: "0"
+  - name: ROTARY_ENCODER_DT_PORT
+    value: SL_GPIO_PORT_B
+  - name: ROTARY_ENCODER_DT_PIN
+    value: "4"
+  - name: ROTARY_ENCODER_SW_PORT
+    value: SL_GPIO_PORT_B
+  - name: ROTARY_ENCODER_SW_PIN
+    value: "5"
+  - name: ROTARY_ENCODER_SW_SHARES_LED0
+    value: "0"
+
+configuration:
+  - name: SL_OPENTHREAD_ENABLE_APP_TASK
+    value: 0
+  - name: SL_OPENTHREAD_ENABLE_CLI_TASK
+    value: 0
+  - name: OPENTHREAD_CONFIG_LOG_OUTPUT
+    value: OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+  - name: SL_MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    value: 1
+  - name: SL_STACK_SIZE
+    value: "4608"
+  - name: SL_BT_RTOS_EVENT_HANDLER_STACK_SIZE
+    value: "1536"
+  - name: CIRCULAR_QUEUE_LEN_MAX
+    value: 16
+  - name: SL_MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS
+    value: 1
+
+toolchain_settings:
+  - option: cxx_standard
+    value: gnu++17
+
+readme:
+  - path: README.md
+
+post_build:
+  profile: application
+
+other_file:
+  - path: qr_code_img.png

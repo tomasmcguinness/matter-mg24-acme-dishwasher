@@ -1,10 +1,10 @@
 # MG24 Tiny Matter Dishwasher
 
-A port of [matter-esp32-tiny-dishwasher](../matter-esp32-tiny-dishwasher) to the Silicon Labs EFR32MG24, running Matter over Thread on the **xG24 Dev Kit (BRD2601B)**.
+A port of [matter-esp32-tiny-dishwasher](../matter-esp32-tiny-dishwasher) to the Silicon Labs EFR32MG24, running Matter over Thread. Primarily built for the **xG24 Dev Kit (BRD2601B)**, with a second target for the **xG24 Explorer Kit (BRD2703A)** (see [BRD2703A](#brd2703a-xg24-explorer-kit)).
 
 It implements the Matter Dishwasher device type, with the mandatory Operational State cluster, the optional On/Off (Dead Front) and Dishwasher Mode clusters, and a Device Energy Management endpoint that publishes a power forecast and accepts start-time adjustments.
 
-It is based on the Silicon Labs `matter_thread_soc_dishwasher_app_freertos` sample (Simplicity SDK 2026.6.0, Matter extension 2.9.0). The dishwasher logic itself comes from the ESP32 version.
+It is based on the Silicon Labs `matter_thread_soc_dishwasher_app_freertos` sample (Simplicity SDK 2026.6.2, Matter extension 2.9.2). The dishwasher logic itself comes from the ESP32 version.
 
 ## Data model
 
@@ -128,6 +128,19 @@ Earlier versions are kept in tags: `archive/now-smart-start` (Now / Smart only) 
 
 The pins, the steps per click (`ROTARY_ENCODER_STEPS_PER_DETENT`, 4 by default; some encoders need 2), the long-press time (`ROTARY_ENCODER_LONG_PRESS_MS`, 1000) and the direction (`ROTARY_ENCODER_REVERSE`) are defines in `include/RotaryEncoder.h`.
 
+### BRD2703A (xG24 Explorer Kit)
+
+`matter_mg24_acme_dishwasher_brd2703a.slcp` builds the same firmware for the **xG24 Explorer Kit (BRD2703A)** instead. It has no 20-pin expansion header like the Dev Kit, so the OLED and encoder land on different connectors, with their own naming instead of `EXPn`:
+
+| Signal | xG24 Explorer Kit | Notes |
+| ------ | ------------------ | ----- |
+| OLED SCL / SDA | **Qwiic** connector | Same I2C1 pins (PC04/PC05) as the Dev Kit, so the wiring in [Display](#display) is unchanged |
+| Encoder CLK | **PWM** pin (Mikroe click socket) | PA00 |
+| Encoder DT | **SCL** pin (Mikroe click socket) | PB04 |
+| Encoder SW | **SDA** pin (Mikroe click socket) | PB05 |
+
+These three Mikroe socket pins are free because this project doesn't add the `i2c`/`pwm` "mikroe" components, so they're repurposed as plain GPIO for the encoder — they aren't shared with an onboard LED the way PB00/PD02 are on the Dev Kit. That also means **LED0 keeps its normal Silabs network-status behaviour** on this board (it isn't stolen for the encoder switch); only LED1 is repurposed, for the dishwasher state, same as on the Dev Kit. The pin overrides live in the `.slcp`'s `define:` section rather than in `include/RotaryEncoder.h`, which keeps its BRD2601B defaults.
+
 ### Shell
 
 Connect to the VCOM serial port at 115200 baud. The shell runs on the same console.
@@ -145,18 +158,27 @@ dishwasher grid           # current and forecast grid carbon intensity
 
 ## Building
 
-You need Simplicity Studio 6, or the `slc` CLI, with Simplicity SDK 2026.6.0 and the Matter extension 2.9.0 installed.
+You need Simplicity Studio 6, or the `slc` CLI, with Simplicity SDK 2026.6.2 and the Matter extension 2.9.2 installed.
 
 ```
 SLC=~/.silabs/slt/installs/archive/slc-cli-v6.0.25/slc_cli/slc
-SDK=~/.silabs/slt/installs/conan/p/simpl508ee6c1a6569/p      # Simplicity SDK 2026.6.0
-MAT=~/.silabs/slt/installs/conan/p/matte295087ec9511f/p      # Matter extension 2.9.0
+SDK=~/.silabs/slt/installs/conan/p/simplf21f16a407b39/p      # Simplicity SDK 2026.6.2
+MAT=~/.silabs/slt/installs/conan/p/matte7fee4d35cf95c/p      # Matter extension 2.9.2
 
 $SLC generate --sdk-package-path=$SDK,$MAT -p matter_mg24_acme_dishwasher.slcp -o cmake -cp
 cd cmake_gcc && cmake --workflow --preset project
 ```
 
 The image is written to `cmake_gcc/build/base/matter_mg24_acme_dishwasher.s37`, and a copy goes to `artifact/`.
+
+For the **xG24 Explorer Kit (BRD2703A)** instead, generate from `matter_mg24_acme_dishwasher_brd2703a.slcp` (see [BRD2703A](#brd2703a-xg24-explorer-kit)):
+
+```
+$SLC generate --sdk-package-path=$SDK,$MAT -p matter_mg24_acme_dishwasher_brd2703a.slcp -o cmake_brd2703a -cp
+cd cmake_brd2703a_gcc && cmake --workflow --preset project
+```
+
+Both can equally be generated from Simplicity Studio 6 by importing the `.slcp` and using Project → Generate.
 
 ## Flashing
 

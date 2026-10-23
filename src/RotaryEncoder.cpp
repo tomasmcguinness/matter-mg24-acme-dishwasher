@@ -35,6 +35,7 @@ int8_t sSteps;
 sl_sleeptimer_timer_handle_t sSettleTimer;
 bool sIsPressed;
 
+#if ROTARY_ENCODER_SW_SHARES_LED0
 // Stands in for the Silabs status LED, whose pin the switch now uses.
 sl_status_t NoLedInit(void *)
 {
@@ -46,6 +47,7 @@ sl_led_state_t NoLedGetState(void *)
     return SL_LED_CURRENT_STATE_OFF;
 }
 const sl_led_t kNoLed = { nullptr, NoLedInit, NoLedAction, NoLedAction, NoLedAction, NoLedGetState };
+#endif
 
 bool Read(const sl_gpio_t & gpio)
 {
@@ -119,9 +121,11 @@ void RotaryEncoder::Init(TurnCallback onTurn, ClickCallback onClick)
     sOnTurn  = onTurn;
     sOnClick = onClick;
 
+#if ROTARY_ENCODER_SW_SHARES_LED0
     // The Silabs base application looks this up on every status LED update. Without this, its
     // writes would switch the switch pin's pull-up to a pull-down and fake clicks.
     sl_simple_led_array[0] = &kNoLed;
+#endif
 
     ConfigureInput(kClk, SL_GPIO_INTERRUPT_RISING_FALLING_EDGE, OnRotation);
     ConfigureInput(kDt, SL_GPIO_INTERRUPT_RISING_FALLING_EDGE, OnRotation);

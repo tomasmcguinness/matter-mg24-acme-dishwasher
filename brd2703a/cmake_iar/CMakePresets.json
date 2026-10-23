@@ -1,0 +1,38 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 25,
+      "patch": 0
+    },
+    "configurePresets": [
+      {
+        "name": "project",
+        "displayName": "Configure matter_mg24_acme_dishwasher_brd2703a",
+        "generator": "Ninja Multi-Config",
+        "binaryDir": "${sourceDir}/build",
+        "toolchainFile": "${sourceDir}/toolchain.cmake",
+        "cacheVariables": {
+          "CMAKE_CONFIGURATION_TYPES": "base"
+        }
+      }
+    ],
+    "buildPresets": [
+      {
+        "name": "default_config",
+        "displayName": "Build matter_mg24_acme_dishwasher_brd2703a",
+        "configurePreset": "project",
+        "configuration": "base",
+        "targets": ["matter_mg24_acme_dishwasher_brd2703a"]
+      }
+    ],
+    "workflowPresets": [
+      {
+        "name": "project",
+        "steps": [
+          {"type": "configure", "name": "project"},
+          {"type": "build", "name": "default_config"}
+        ]
+      }
+    ]
+  }

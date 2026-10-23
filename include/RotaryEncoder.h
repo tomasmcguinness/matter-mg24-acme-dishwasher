@@ -28,6 +28,14 @@
 #define ROTARY_ENCODER_SW_PIN 2
 #endif
 
+// Whether SW physically shares its pin with LED0 (the Silabs status LED), as on BRD2601B. When it
+// does, RotaryEncoder::Init() disconnects LED0 so the base application's status blink doesn't
+// fight the switch reading. Boards that wire the encoder elsewhere (e.g. BRD2703A's MikroBUS
+// socket) must set this to 0, so LED0 is left alone.
+#ifndef ROTARY_ENCODER_SW_SHARES_LED0
+#define ROTARY_ENCODER_SW_SHARES_LED0 1
+#endif
+
 // Quadrature steps per click of the knob. KY-040 style encoders do a full cycle (4) per detent;
 // some do half a cycle (2).
 #ifndef ROTARY_ENCODER_STEPS_PER_DETENT

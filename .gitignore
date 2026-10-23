@@ -1,12 +1,18 @@
 # SDK copies made by `slc generate -cp`; regenerate them instead
 simplicity_sdk_2026.6.0/
 matter_2.9.0/
+simplicity_sdk_2026.6.2/
+matter_2.9.2/
 
-# Build output
+# Build output (both the root BRD2601B project and per-board subfolders like brd2703a/)
 cmake_gcc/build/
 cmake_iar/build/
 cmake_llvm/build/
 artifact/
+**/cmake_gcc/build/
+**/cmake_iar/build/
+**/cmake_llvm/build/
+**/artifact/
 
 # Files slc moves aside on regeneration
 trashed_modified_files/

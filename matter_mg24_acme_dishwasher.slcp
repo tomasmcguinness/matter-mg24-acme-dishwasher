@@ -14,11 +14,11 @@ quality: experimental
 
 sdk:
   id: simplicity_sdk
-  version: 2026.6.0
+  version: 2026.6.2
 
 sdk_extension:
   - id: matter
-    version: "2.9.0"
+    version: "2.9.2"
     vendor: silabs
 
 component:

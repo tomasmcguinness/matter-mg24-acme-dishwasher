@@ -60,6 +60,17 @@
 #define CHIP_DEVICE_CONFIG_DEVICE_PRODUCT_ID 0x8005
 
 /**
+ * CHIP_DEVICE_CONFIG_DEVICE_VENDOR_NAME / CHIP_DEVICE_CONFIG_DEVICE_PRODUCT_NAME
+ *
+ * Human-readable Basic Information cluster strings. Without these, ConfigurationManager falls
+ * back to the SDK's own generic placeholders ("TEST_VENDOR"/"TEST_PRODUCT"); boards that still
+ * show "Silabs"/"SL_Sample" instead have that left over in NVM3 from a prior firmware and need a
+ * full chip erase (`commander device masserase`) before reflashing for this to take effect.
+ */
+#define CHIP_DEVICE_CONFIG_DEVICE_VENDOR_NAME "Silicon Labs"
+#define CHIP_DEVICE_CONFIG_DEVICE_PRODUCT_NAME "Tiny Dishwasher"
+
+/**
  * CHIP_DEVICE_CONFIG_ENABLE_CHIPOBLE
  *
  * Enable support for Chip-over-BLE (CHIPoBLE).
